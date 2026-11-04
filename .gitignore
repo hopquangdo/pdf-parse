@@ -1,0 +1,41 @@
+# python / env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# secrets
+keyopenrouter*
+*.pem
+*.key
+
+# runtime data (uploads, db, OCR jobs, run logs)
+data/
+
+# frontend
+app/frontend/node_modules/
+app/frontend/dist/
+*.tsbuildinfo
+
+# experiment output and packaging
+output/
+release.tgz
+*.log
+
+# customer drawings (large, possibly confidential)
+/*.pdf
+
+# finetune leftovers
+training/data/
+training/runs/
+
+# editor / OS
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

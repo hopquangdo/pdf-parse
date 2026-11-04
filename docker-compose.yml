@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: steel-takeoff-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-steel}
+      POSTGRES_USER: ${POSTGRES_USER:-steel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data   # accounts and sessions: keep this volume
+    # no `ports:` on purpose: only the app container can reach the database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+
+  app:
+    build: .
+    image: steel-takeoff:latest
+    container_name: steel-takeoff
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy    # the app migrates the schema at start, so the database must be ready
+    ports:
+      - "${BIND:-127.0.0.1}:${PORT:-8000}:8000"   # localhost only by default; put a TLS reverse proxy in front to publish
+    env_file:
+      - path: .env        # LLM_BASE_URL, LLM_MODEL_NAME, LLM_API_KEY (optional file)
+        required: false
+    environment:
+      DATA_DIR: /data
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-steel}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-steel}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (at least 32 random characters)}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}   # true when served over HTTPS
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}            # first-run administrator, only used while the users table is empty
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrator}
+      ADMIN_MUST_CHANGE: ${ADMIN_MUST_CHANGE:-true}   # false only on a development machine
+      USD_VND: ${USD_VND:-26000}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-30}
+      OCR_ENGINE: ${OCR_ENGINE:-llm}     # local: needs an image built with --build-arg LOCAL_OCR=1
+    volumes:
+      - app-data:/data    # uploads, run logs (data/runs), exports: survives rebuilds
+    read_only: true       # nothing is written outside /data and /tmp
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+volumes:
+  app-data:
+  db-data:

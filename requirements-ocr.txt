@@ -1,0 +1,11 @@
+# Extra packages of the "local" OCR engine (OCR_ENGINE=local): ruling lines + VietOCR read every cell, the language model only repairs doubtful cells.
+# Installed by the Docker build with --build-arg LOCAL_OCR=1, together with:  pip install --no-deps vietocr==0.3.13
+# (vietocr's own dependency list pulls training-only packages; these are what it needs to read.)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.7.1
+torchvision==0.22.1
+einops==0.8.1
+gdown==5.2.0
+PyYAML==6.0.2
+requests==2.32.3
+tqdm==4.67.1
