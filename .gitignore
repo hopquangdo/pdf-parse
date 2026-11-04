@@ -29,9 +29,6 @@ release.tgz
 # customer drawings (large, possibly confidential)
 /*.pdf
 
-# finetune leftovers
-training/data/
-training/runs/
 
 # editor / OS
 .claude/
@@ -39,4 +36,3 @@ training/runs/
 .idea/
 .DS_Store
 Thumbs.db
-/training/
